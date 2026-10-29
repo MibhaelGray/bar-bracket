@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bar Bracket</title>
+<style>
+:root{--bg:#fafaf7;--card:#fff;--line:#d6d6ce;--text:#1a1a1a;--muted:#999;--win:#1a1a1a;--wintext:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#141414;--card:#1f1f1f;--line:#3a3a3a;--text:#eee;--muted:#777;--win:#eee;--wintext:#141414}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"Helvetica Neue",Helvetica,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:40px 16px}
+h1{font-size:36px;letter-spacing:-1px;margin:0 0 6px}p.sub{color:var(--muted);margin:0 0 32px}
+.bracket{display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+.col h2{font-size:12px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:0 0 14px}
+.round{display:flex;flex-direction:column;justify-content:space-around;height:560px}
+.match{display:flex;flex-direction:column;gap:6px}
+button.team{all:unset;cursor:pointer;display:block;background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:12px 14px;font-size:16px;font-weight:500;min-height:20px;transition:.15s}
+button.team:hover:not(:disabled){border-color:var(--text)}
+button.team:disabled{cursor:default;color:var(--muted);background:transparent;border-style:dashed}
+button.team.picked{background:var(--win);color:var(--wintext);border-color:var(--win)}
+.champ{background:var(--win);color:var(--wintext);border-radius:10px;padding:18px;text-align:center;font-size:20px;font-weight:700}
+.bar{display:flex;gap:10px;margin-top:32px}
+.bar button{all:unset;cursor:pointer;border:1.5px solid var(--line);border-radius:8px;padding:10px 16px;font-size:14px}
+.bar button:hover{border-color:var(--text)}
+@media (max-width:760px){.bracket{grid-template-columns:1fr}.round{height:auto;gap:14px}}
+</style></head><body><main>
+<h1>Bar Bracket</h1><p class="sub">Tap a bar to send it to the next round.</p>
+<div class="bracket" id="b"></div>
+<div class="bar"><button id="share">Copy link to my picks</button><button id="reset">Reset</button></div>
+</main><script>
+const T=["Lolo's","Tinny G's","Rosie's","Busty's","Tweedy's","Workhorse Bar","Deep Eddy's","Community Garden"];
+let p=Array(7).fill(null); // 0-3 quarter winners, 4-5 semi winners, 6 champ
+try{const h=location.hash.slice(1);if(h)h.split(',').forEach((v,i)=>{if(i<7&&v!=='')p[i]=+v})}catch(e){}
+function entrants(r){if(r===0)return T.map((_,i)=>i);if(r===1)return p.slice(0,4);if(r===2)return p.slice(4,6);return[p[6]]}
+function pick(r,m,v){const base=[0,4,6][r];p[base+m]=v;
+ validate();render()}
+function validate(){for(let k=4;k<6;k++){const a=p[(k-4)*2],b=p[(k-4)*2+1];if(p[k]!=null&&p[k]!==a&&p[k]!==b)p[k]=null}
+ if(p[6]!=null&&p[6]!==p[4]&&p[6]!==p[5])p[6]=null;history.replaceState(null,'','#'+p.map(v=>v??'').join(','))}
+function render(){const b=document.getElementById('b');b.innerHTML='';
+ ['Round 1','Semifinals','Final','Winner'].forEach((name,r)=>{const col=document.createElement('div');col.className='col';col.innerHTML=`<h2>${name}</h2>`;
+  const round=document.createElement('div');round.className='round';
+  if(r===3){const c=document.createElement('div');c.className='champ';c.textContent=p[6]!=null?'🏆 '+T[p[6]]:'🏆';round.append(c)}
+  else{const e=entrants(r);for(let m=0;m<e.length/2;m++){const mt=document.createElement('div');mt.className='match';
+   [e[2*m],e[2*m+1]].forEach(v=>{const bt=document.createElement('button');bt.className='team';bt.textContent=v!=null?T[v]:'';bt.disabled=v==null;
+    if(v!=null&&p[[0,4,6][r]+m]===v)bt.classList.add('picked');bt.onclick=()=>pick(r,m,v);mt.append(bt)});round.append(mt)}}
+  col.append(round);b.append(col)})}
+document.getElementById('reset').onclick=()=>{p=Array(7).fill(null);validate();render()};
+document.getElementById('share').onclick=async e=>{try{await navigator.clipboard.writeText(location.href);e.target.textContent='Copied!'}catch(_){prompt('Copy this link',location.href)}setTimeout(()=>e.target.textContent='Copy link to my picks',1500)};
+validate();render();
+</script></body></html>
